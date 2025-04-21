@@ -15,7 +15,7 @@
   <author email="nkhedekar@nevada.unr.edu">Nikhil Khedekar</author>
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
 
-  <depend>libopen3d-dev</depend>
+  <depend>open3d_vendor</depend>
   <depend>rclcpp</depend>
   <depend>rcpputils</depend>
   <depend>sensor_msgs</depend>

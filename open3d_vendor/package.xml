@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>open3d_vendor</name>
+  <version>0.1.0</version>
+  <description>The vendor package for Open3D</description>
+  <maintainer email="SBGRP-git@g.softbank.co.jp">SoftBank corp.</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>git</buildtool_depend>
+
+  <depend>libxi-dev</depend>
+  <depend>opengl</depend>
+  <depend>sdl2</depend>
+  <depend>tbb</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
