@@ -21,6 +21,8 @@ macro(build_open3d)
       -DBUILD_SHARED_LIBS=ON
       -DBUILD_EXAMPLES=OFF
       -DBUILD_PYTHON_MODULE=OFF
+      -DBUILD_GUI=OFF
+      -DBUILD_WEBRTC=OFF
   )
 
   # The external project will install to the build folder, but we'll install that on make install.
@@ -40,6 +42,4 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-ament_package(
-  CONFIG_EXTRAS "open3d_vendor-extras.cmake"
-)
+ament_package(CONFIG_EXTRAS "open3d_vendor-extras.cmake")
