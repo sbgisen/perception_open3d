@@ -137,41 +137,44 @@ void rosToOpen3d(
   sensor_msgs::PointCloud2ConstIterator<float> ros_pc2_y(*ros_pc2, "y");
   sensor_msgs::PointCloud2ConstIterator<float> ros_pc2_z(*ros_pc2, "z");
   o3d_pc.points_.reserve(ros_pc2->height * ros_pc2->width);
-  if (ros_pc2->fields.size() == 3 || skip_colors == true) {
+
+  // Check if color fields exist
+  bool has_rgb = false;
+  bool has_intensity = false;
+  for (const auto & field : ros_pc2->fields) {
+    if (field.name == "rgb") {
+      has_rgb = true;
+    }
+    if (field.name == "intensity") {
+      has_intensity = true;
+    }
+  }
+  if (ros_pc2->fields.size() == 3 || skip_colors) {
     for (size_t i = 0; i < ros_pc2->height * ros_pc2->width;
       ++i, ++ros_pc2_x, ++ros_pc2_y, ++ros_pc2_z)
     {
-      o3d_pc.points_.push_back(
-        Eigen::Vector3d(*ros_pc2_x, *ros_pc2_y, *ros_pc2_z));
+      o3d_pc.points_.emplace_back(*ros_pc2_x, *ros_pc2_y, *ros_pc2_z);
     }
   } else {
     o3d_pc.colors_.reserve(ros_pc2->height * ros_pc2->width);
-    if (ros_pc2->fields[3].name == "rgb") {
-      sensor_msgs::PointCloud2ConstIterator<uint8_t> ros_pc2_r(*ros_pc2, "r");
-      sensor_msgs::PointCloud2ConstIterator<uint8_t> ros_pc2_g(*ros_pc2, "g");
-      sensor_msgs::PointCloud2ConstIterator<uint8_t> ros_pc2_b(*ros_pc2, "b");
-
-      for (size_t i = 0; i < ros_pc2->height * ros_pc2->width; ++i, ++ros_pc2_x,
-        ++ros_pc2_y, ++ros_pc2_z, ++ros_pc2_r, ++ros_pc2_g, ++ros_pc2_b)
-      {
-        o3d_pc.points_.push_back(
-          Eigen::Vector3d(*ros_pc2_x, *ros_pc2_y, *ros_pc2_z));
-        o3d_pc.colors_.push_back(
-          Eigen::Vector3d(
-            (static_cast<int>(*ros_pc2_r)) / 255.0,
-            (static_cast<int>(*ros_pc2_g)) / 255.0,
-            (static_cast<int>(*ros_pc2_b)) / 255.0));
-      }
-    } else if (ros_pc2->fields[3].name == "intensity") {
-      sensor_msgs::PointCloud2ConstIterator<uint8_t> ros_pc2_i(*ros_pc2,
-        "intensity");
+    if (has_rgb) {
+      sensor_msgs::PointCloud2ConstIterator<float> ros_pc2_rgb(*ros_pc2, "rgb");
       for (size_t i = 0; i < ros_pc2->height * ros_pc2->width;
-        ++i, ++ros_pc2_x, ++ros_pc2_y, ++ros_pc2_z, ++ros_pc2_i)
-      {
-        o3d_pc.points_.push_back(
-          Eigen::Vector3d(*ros_pc2_x, *ros_pc2_y, *ros_pc2_z));
-        o3d_pc.colors_.push_back(
-          Eigen::Vector3d(*ros_pc2_i, *ros_pc2_i, *ros_pc2_i));
+           ++i, ++ros_pc2_x, ++ros_pc2_y, ++ros_pc2_z, ++ros_pc2_rgb) {
+        o3d_pc.points_.emplace_back(*ros_pc2_x, *ros_pc2_y, *ros_pc2_z);
+        uint32_t rgb = *reinterpret_cast<const uint32_t *>(&(*ros_pc2_rgb));
+        uint8_t r = (rgb >> 16) & 0x0000FF;
+        uint8_t g = (rgb >> 8) & 0x0000FF;
+        uint8_t b = rgb & 0x0000FF;
+        o3d_pc.colors_.emplace_back(r / 255.0, g / 255.0, b / 255.0);
+      }
+    } else if (has_intensity) {
+      sensor_msgs::PointCloud2ConstIterator<float> ros_pc2_i(*ros_pc2, "intensity");
+      for (size_t i = 0; i < ros_pc2->height * ros_pc2->width;
+           ++i, ++ros_pc2_x, ++ros_pc2_y, ++ros_pc2_z, ++ros_pc2_i) {
+        o3d_pc.points_.emplace_back(*ros_pc2_x, *ros_pc2_y, *ros_pc2_z);
+        float intensity = *ros_pc2_i;
+        o3d_pc.colors_.emplace_back(intensity, intensity, intensity);
       }
     }
   }
