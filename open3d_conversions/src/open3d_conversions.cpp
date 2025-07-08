@@ -150,16 +150,17 @@ void rosToOpen3d(
     }
   }
   if (ros_pc2->fields.size() == 3 || skip_colors) {
-    for (size_t i = 0; i < ros_pc2->height * ros_pc2->width;
-      ++i, ++ros_pc2_x, ++ros_pc2_y, ++ros_pc2_z)
-    {
+    for (size_t i = 0; ros_pc2_x != ros_pc2_x.end() && ros_pc2_y != ros_pc2_y.end() && ros_pc2_z != ros_pc2_z.end();
+         ++i, ++ros_pc2_x, ++ros_pc2_y, ++ros_pc2_z) {
       o3d_pc.points_.emplace_back(*ros_pc2_x, *ros_pc2_y, *ros_pc2_z);
     }
   } else {
     o3d_pc.colors_.reserve(ros_pc2->height * ros_pc2->width);
     if (has_rgb) {
       sensor_msgs::PointCloud2ConstIterator<float> ros_pc2_rgb(*ros_pc2, "rgb");
-      for (size_t i = 0; i < ros_pc2->height * ros_pc2->width;
+      for (size_t i = 0; ros_pc2_x != ros_pc2_x.end() &&
+           ros_pc2_y != ros_pc2_y.end() && ros_pc2_z != ros_pc2_z.end() &&
+           ros_pc2_rgb != ros_pc2_rgb.end();
            ++i, ++ros_pc2_x, ++ros_pc2_y, ++ros_pc2_z, ++ros_pc2_rgb) {
         o3d_pc.points_.emplace_back(*ros_pc2_x, *ros_pc2_y, *ros_pc2_z);
         uint32_t rgb = *reinterpret_cast<const uint32_t *>(&(*ros_pc2_rgb));
@@ -170,7 +171,9 @@ void rosToOpen3d(
       }
     } else if (has_intensity) {
       sensor_msgs::PointCloud2ConstIterator<float> ros_pc2_i(*ros_pc2, "intensity");
-      for (size_t i = 0; i < ros_pc2->height * ros_pc2->width;
+      for (size_t i = 0; ros_pc2_x != ros_pc2_x.end() &&
+           ros_pc2_y != ros_pc2_y.end() && ros_pc2_z != ros_pc2_z.end() &&
+           ros_pc2_i != ros_pc2_i.end();
            ++i, ++ros_pc2_x, ++ros_pc2_y, ++ros_pc2_z, ++ros_pc2_i) {
         o3d_pc.points_.emplace_back(*ros_pc2_x, *ros_pc2_y, *ros_pc2_z);
         float intensity = *ros_pc2_i;
