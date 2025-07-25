@@ -15,6 +15,7 @@ find_package(open3d_vendor REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcpputils REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(pcl_conversions REQUIRED)
 
 include_directories(
   include
@@ -31,6 +32,7 @@ ament_target_dependencies(
   "rclcpp"
   "rcpputils"
   "sensor_msgs"
+  "pcl_conversions"
 )
 target_link_libraries(open3d_conversions ${Open3D_LIBRARIES})
 target_compile_definitions(open3d_conversions PUBLIC "OPEN3D_CONVERSIONS_BUILDING_LIBRARY")
