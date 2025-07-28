@@ -13,7 +13,7 @@
 
   <author email="matnay17@gmail.com">Pranay Mathur</author>
   <author email="nkhedekar@nevada.unr.edu">Nikhil Khedekar</author>
-  <buildtool_depend>ament_cmake_ros</buildtool_depend>
+  <buildtool_depend>ament_cmake_auto</buildtool_depend>
 
   <depend>open3d_vendor</depend>
   <depend>rclcpp</depend>
