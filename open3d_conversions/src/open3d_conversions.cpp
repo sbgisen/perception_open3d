@@ -13,14 +13,13 @@
 // limitations under the License.
 
 // C++
-#include "open3d_conversions/open3d_conversions.hpp"
-
-#include <pcl_conversions/pcl_conversions.h>
+#include <memory>
+#include <string>
+#include <sstream>
 
 #include <rcpputils/endian.hpp>
 #include <sensor_msgs/image_encodings.hpp>
-#include <sstream>
-#include <string>
+#include "open3d_conversions/open3d_conversions.hpp"
 
 // Verify that an encoding makes sense with a given image
 static void checkEncodingValidity(
@@ -134,6 +133,11 @@ void rosToOpen3d(
   const sensor_msgs::msg::PointCloud2::SharedPtr & ros_pc2,
   open3d::geometry::PointCloud & o3d_pc, bool skip_colors)
 {
+  sensor_msgs::PointCloud2ConstIterator<float> ros_pc2_x(*ros_pc2, "x");
+  sensor_msgs::PointCloud2ConstIterator<float> ros_pc2_y(*ros_pc2, "y");
+  sensor_msgs::PointCloud2ConstIterator<float> ros_pc2_z(*ros_pc2, "z");
+  o3d_pc.points_.reserve(ros_pc2->height * ros_pc2->width);
+
   // Check if color fields exist
   bool has_rgb = false;
   bool has_intensity = false;
@@ -146,34 +150,33 @@ void rosToOpen3d(
     }
   }
   if (ros_pc2->fields.size() == 3 || skip_colors) {
-    pcl::PointCloud<pcl::PointXYZ> pcl_pc;
-    pcl::fromROSMsg(*ros_pc2, pcl_pc);
-    o3d_pc.points_.reserve(pcl_pc.points.size());
-    for (const auto & point : pcl_pc.points) {
-      o3d_pc.points_.emplace_back(point.x, point.y, point.z);
+    for (size_t i = 0; ros_pc2_x != ros_pc2_x.end() && ros_pc2_y != ros_pc2_y.end() && ros_pc2_z != ros_pc2_z.end();
+         ++i, ++ros_pc2_x, ++ros_pc2_y, ++ros_pc2_z) {
+      o3d_pc.points_.emplace_back(*ros_pc2_x, *ros_pc2_y, *ros_pc2_z);
     }
   } else {
+    o3d_pc.colors_.reserve(ros_pc2->height * ros_pc2->width);
     if (has_rgb) {
-      pcl::PointCloud<pcl::PointXYZRGB> pcl_pc;
-      pcl::fromROSMsg(*ros_pc2, pcl_pc);
-      o3d_pc.points_.reserve(pcl_pc.points.size());
-      o3d_pc.colors_.reserve(pcl_pc.points.size());
-      for (const auto & point : pcl_pc.points) {
-        o3d_pc.points_.emplace_back(point.x, point.y, point.z);
-        uint32_t rgb = point.rgb;
+      sensor_msgs::PointCloud2ConstIterator<float> ros_pc2_rgb(*ros_pc2, "rgb");
+      for (size_t i = 0; ros_pc2_x != ros_pc2_x.end() &&
+           ros_pc2_y != ros_pc2_y.end() && ros_pc2_z != ros_pc2_z.end() &&
+           ros_pc2_rgb != ros_pc2_rgb.end();
+           ++i, ++ros_pc2_x, ++ros_pc2_y, ++ros_pc2_z, ++ros_pc2_rgb) {
+        o3d_pc.points_.emplace_back(*ros_pc2_x, *ros_pc2_y, *ros_pc2_z);
+        uint32_t rgb = *reinterpret_cast<const uint32_t *>(&(*ros_pc2_rgb));
         uint8_t r = (rgb >> 16) & 0x0000FF;
         uint8_t g = (rgb >> 8) & 0x0000FF;
         uint8_t b = rgb & 0x0000FF;
         o3d_pc.colors_.emplace_back(r / 255.0, g / 255.0, b / 255.0);
       }
     } else if (has_intensity) {
-      pcl::PointCloud<pcl::PointXYZI> pcl_pc;
-      pcl::fromROSMsg(*ros_pc2, pcl_pc);
-      o3d_pc.points_.reserve(pcl_pc.points.size());
-      o3d_pc.colors_.reserve(pcl_pc.points.size());
-      for (const auto & point : pcl_pc.points) {
-        o3d_pc.points_.emplace_back(point.x, point.y, point.z);
-        float intensity = point.intensity;
+      sensor_msgs::PointCloud2ConstIterator<float> ros_pc2_i(*ros_pc2, "intensity");
+      for (size_t i = 0; ros_pc2_x != ros_pc2_x.end() &&
+           ros_pc2_y != ros_pc2_y.end() && ros_pc2_z != ros_pc2_z.end() &&
+           ros_pc2_i != ros_pc2_i.end();
+           ++i, ++ros_pc2_x, ++ros_pc2_y, ++ros_pc2_z, ++ros_pc2_i) {
+        o3d_pc.points_.emplace_back(*ros_pc2_x, *ros_pc2_y, *ros_pc2_z);
+        float intensity = *ros_pc2_i;
         o3d_pc.colors_.emplace_back(intensity, intensity, intensity);
       }
     }
